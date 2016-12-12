@@ -131,13 +131,7 @@ public class DatabaseHelper {
         values.put("deleted", 0);
         values.put("uploaded", 0);
         //assign to current user
-        User user = this.getCurrentUser();
-        if(user != null) {
-            values.put("email", user.email_);
-        } else {
-            //return;
-            values.put("email", "");
-        }
+        values.put("email", "");
         meta_.insert(TABLE_META, null, values);
     }
 
@@ -250,14 +244,8 @@ public class DatabaseHelper {
 
 
     public List<Trip> loadTrips() {
-        User user = this.getCurrentUser();
         List<Trip> trips = new ArrayList<Trip>();
-        String selectQuery = "";
-        if(user == null) {
-            selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE email = '"+"' order by starttime desc;";
-        } else {
-            selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE email = '" + user.email_ + "' or email = '"+"' order by starttime desc;";
-        }
+        String selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE email = '"+"' order by starttime desc;";
         Cursor cursor = meta_.rawQuery(selectQuery, null);
         cursor.moveToFirst();
         if(cursor.getCount() == 0) {
@@ -278,8 +266,8 @@ public class DatabaseHelper {
     }
 
 
-    public long[] tripsToSynchronize (String useremail) {
-        String selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE uploaded = 1 and deleted = 1 and " + " email = '" + useremail + "';";
+    public long[] tripsToSynchronize () {
+        String selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE uploaded = 1 and deleted = 1;";
         Cursor cursor = meta_.rawQuery(selectQuery, null);
         cursor.moveToFirst();
         if(cursor.getCount() == 0) {
@@ -302,8 +290,8 @@ public class DatabaseHelper {
     /**
      * all about uploading
      */
-    public long nextTripToUpload(String useremail) {
-        String selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE uploaded = 0 and " + " email = '" + useremail + "';";
+    public long nextTripToUpload() {
+        String selectQuery = "SELECT  * FROM " + TABLE_META + " WHERE uploaded = 0;";
         Cursor cursor = meta_.rawQuery(selectQuery, null);
         cursor.moveToFirst();
         long stime = -1;
@@ -343,82 +331,6 @@ public class DatabaseHelper {
         String where = "starttime = ? ";
         String[] whereArgs = {String.valueOf(time)};
         return meta_.update(TABLE_META, data, where, whereArgs);
-    }
-
-
-
-    //email TEXT, firstname TEXT, lastname TEXT, password TEXT, loginstatus INTEGER
-    /* ========================== User Specific Database Operations =================================== */
-    public boolean newUser(User user) {
-        ContentValues values = new ContentValues();
-        values.put("email", user.email_);
-        values.put("firstname", user.firstname_);
-        values.put("lastname", user.lastname_);
-        values.put("password", user.password_);
-        values.put("loginstatus", 1);
-        meta_.insert(TABLE_USER, null, values);
-        return true;
-    }
-    public User getCurrentUser() {
-        User user = null;
-        String selectQuery = "SELECT  * FROM " + TABLE_USER + " WHERE loginstatus = 1;";
-        Cursor cursor = meta_.rawQuery(selectQuery, null);
-        cursor.moveToFirst();
-        do {
-            if(cursor.getCount() == 0) {
-                break;
-            }
-            user = new User();
-            user.email_ = cursor.getString(0);
-            user.firstname_ = cursor.getString(1);
-            user.lastname_ = cursor.getString(2);
-            user.password_ = cursor.getString(3);
-            user.loginstatus_ = cursor.getInt(4);
-            break;
-        } while (cursor.moveToNext());
-        return user;
-    }
-
-    public boolean hasUser(String email) {
-        String selectQuery = "SELECT  * FROM " + TABLE_USER + " WHERE email like '" + email + "'";
-        Cursor cursor = meta_.rawQuery(selectQuery, null);
-        cursor.moveToFirst();
-        if(cursor.getCount() == 0) return false;
-        else return true;
-    }
-
-    public boolean userLogin(User user) {
-        if(!hasUser(user.email_)) {
-            return false;
-        }
-        Log.d(TAG, "user login processing in database");
-        ContentValues data = new ContentValues();
-        data.put("loginstatus", 1);
-        String where = "email = ? ";
-        String[] whereArgs = {user.email_};
-        try {
-            meta_.update(TABLE_USER, data, where, whereArgs);
-            return true;
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
-            return false;
-        }
-
-
-    }
-
-    public boolean userLogout(User user) {
-        Log.d(TAG, "user logout processing in database");
-        ContentValues data = new ContentValues();
-        data.put("loginstatus", 0);
-        String where = "email = ? ";
-        String[] whereArgs = {user.email_};
-        try {
-            meta_.update(TABLE_USER, data, where, whereArgs);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
 }

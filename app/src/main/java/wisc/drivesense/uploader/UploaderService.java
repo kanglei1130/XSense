@@ -76,18 +76,14 @@ public class UploaderService extends Service {
      * @param msg
      */
     private void nextTask(String msg) {
-        User user = dbHelper_.getCurrentUser();
-        if(user == null) {
-            //no one is signed in
-            stopService();
+
+
+
+        if(true == selectAndUploadOneFile()){
             return;
         }
 
-        if(true == selectAndUploadOneFile(user.email_)){
-            return;
-        }
-
-        if(true == synchronizeDeletion(user.email_)) {
+        if(true == synchronizeDeletion()) {
             return;
         }
 
@@ -97,8 +93,8 @@ public class UploaderService extends Service {
     }
 
 
-    private boolean synchronizeDeletion(String email) {
-        long [] trips = dbHelper_.tripsToSynchronize(email);
+    private boolean synchronizeDeletion() {
+        long [] trips = dbHelper_.tripsToSynchronize();
         if(trips == null) {
             return false;
         }
@@ -109,9 +105,9 @@ public class UploaderService extends Service {
         return true;
     }
 
-    private boolean selectAndUploadOneFile(String email) {
+    private boolean selectAndUploadOneFile() {
         //upload next trip
-        long time = dbHelper_.nextTripToUpload(email);
+        long time = dbHelper_.nextTripToUpload();
         if(-1 == time) {
             return false;
         }
@@ -219,11 +215,6 @@ public class UploaderService extends Service {
         }
 
         private String synchronizeDeletion(String tripnames) {
-            User user = dbHelper_.getCurrentUser();
-            if(user == null) {
-                return null;
-            }
-            String useremail = user.email_;
             String androidid = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
 
             String res = null;
@@ -231,7 +222,7 @@ public class UploaderService extends Service {
                 HttpClient client = new HttpClient(Constants.kSyncDeleteURL);
                 client.connectForMultipart();
                 client.addFormPart("deviceid", androidid);
-                client.addFormPart("email", useremail);
+                client.addFormPart("email", Constants.kUserEmail);
                 client.addFormPart("model", Build.MANUFACTURER + "," + Build.MODEL);
                 client.addFormPart("tripnames", tripnames);
                 client.finishMultipart();
@@ -244,11 +235,6 @@ public class UploaderService extends Service {
         }
 
         private String uploadTrip(String dbname) {
-            User user = dbHelper_.getCurrentUser();
-            if (user == null) {
-                return null;
-            }
-            String useremail = user.email_;
             String androidid = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
 
             byte[] byteArray = null;
@@ -277,7 +263,7 @@ public class UploaderService extends Service {
                 if (trip != null) {
                     client.connectForMultipart();
                     client.addFormPart("deviceid", androidid);
-                    client.addFormPart("email", useremail);
+                    client.addFormPart("email", Constants.kUserEmail);
                     client.addFormPart("model", Build.MANUFACTURER + "," + Build.MODEL);
                     client.addFormPart("starttime", String.valueOf(trip.getStartTime()));
                     client.addFormPart("endtime", String.valueOf(trip.getEndTime()));
