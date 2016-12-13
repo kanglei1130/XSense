@@ -12,7 +12,7 @@ import java.io.StringWriter;
 public class Trace implements Serializable {
 
     public long time;
-    public float [] values = null;
+    public double [] values = null;
     public int dim;
     public String type = "none";
 
@@ -30,16 +30,16 @@ public class Trace implements Serializable {
     public Trace() {
         time = 0;
         dim = 3;
-        values = new float [dim];
+        values = new double [dim];
     }
 
     public Trace(int d) {
         time = 0;
         dim = d;
-        values = new float [dim];
+        values = new double [dim];
     }
 
-    public void setValues(float x, float y, float z) {
+    public void setValues(double x, double y, double z) {
         values[0] = x;
         values[1] = y;
         values[2] = z;
@@ -50,7 +50,7 @@ public class Trace implements Serializable {
     public void copyTrace(Trace trace) {
         this.time = trace.time;
         this.dim = trace.dim;
-        this.values = new float[dim];
+        this.values = new double[dim];
         for(int i = 0; i < dim; ++i) {
             this.values[i] = trace.values[i];
         }
@@ -99,7 +99,7 @@ public class Trace implements Serializable {
                     time = reader.nextLong();
                 } else if (name.equals("dim")) {
                     dim = reader.nextInt();
-                    values = new float[dim];
+                    values = new double[dim];
                 } else if (name.contains("x")) {
                     int index = Integer.valueOf(name.substring(1)).intValue();
                     values[index] = (float)reader.nextDouble();

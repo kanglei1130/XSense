@@ -59,10 +59,10 @@ public class SensorService extends Service implements SensorEventListener, Locat
         if(location != null){
             Trace trace = new Trace(4);
             trace.time = System.currentTimeMillis();
-            trace.values[0] = (float) location.getLatitude();
-            trace.values[1] = (float) location.getLongitude();
+            trace.values[0] = location.getLatitude();
+            trace.values[1] = location.getLongitude();
             trace.values[2] = location.getSpeed();
-            trace.values[3] = (float) location.getAltitude();
+            trace.values[3] = location.getAltitude();
             trace.type = Trace.GPS;
 
             sendTrace(trace);
@@ -110,8 +110,10 @@ public class SensorService extends Service implements SensorEventListener, Locat
             Trace trace = new Trace(3);
             trace.time = time;
             trace.type = Trace.MAGNETOMETER;
-            System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
-
+            //System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
+            for(int i = 0; i < 3; ++i) {
+                trace.values[i] = event.values[i];
+            }
             sendTrace(trace);
 
         } else if(type==Sensor.TYPE_ACCELEROMETER && (time - tLastAccelerometer) >= Constants.kRecordingInterval) {
@@ -122,7 +124,10 @@ public class SensorService extends Service implements SensorEventListener, Locat
             Trace trace = new Trace(3);
             trace.time = time;
             trace.type = Trace.ACCELEROMETER;
-            System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
+            //System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
+            for(int i = 0; i < 3; ++i) {
+                trace.values[i] = event.values[i];
+            }
             sendTrace(trace);
 
         } else if (type == Sensor.TYPE_GYROSCOPE && (time - tLastGyroscope) >= Constants.kRecordingInterval) {
@@ -133,7 +138,10 @@ public class SensorService extends Service implements SensorEventListener, Locat
             Trace trace = new Trace(3);
             trace.time = time;
             trace.type = Trace.GYROSCOPE;
-            System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
+            //System.arraycopy(event.values, 0, trace.values, 0, event.values.length);
+            for(int i = 0; i < 3; ++i) {
+                trace.values[i] = event.values[i];
+            }
             sendTrace(trace);
 
         } else {
@@ -149,7 +157,12 @@ public class SensorService extends Service implements SensorEventListener, Locat
             Trace trace = new Trace(9);
             trace.time = time;
             trace.type = Trace.ROTATION_MATRIX;
-            System.arraycopy(mR, 0, trace.values, 0, mR.length);
+            //System.arraycopy(mR, 0, trace.values, 0, mR.length);
+
+            for(int i = 0; i < 9; ++i) {
+                trace.values[i] = mR[i];
+            }
+
             sendTrace(trace);
         }
     }

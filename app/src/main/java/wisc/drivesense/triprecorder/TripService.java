@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import wisc.drivesense.database.DatabaseHelper;
+import wisc.drivesense.dataprocessing.RealTimeSensorProcessing;
 import wisc.drivesense.utility.Constants;
 import wisc.drivesense.utility.Rating;
 import wisc.drivesense.utility.Trace;
@@ -25,6 +26,7 @@ public class TripService extends Service {
     private DatabaseHelper dbHelper_ = null;
     public Trip curtrip_ = null;
     public Rating rating_ = null;
+    public RealTimeSensorProcessing processing_ = null;
 
     public Binder _binder = new TripServiceBinder();
     private AtomicBoolean _isRunning = new AtomicBoolean(false);
@@ -100,6 +102,8 @@ public class TripService extends Service {
         curtrip_ = new Trip(time);
         rating_ = new Rating(curtrip_);
 
+        processing_ = new RealTimeSensorProcessing();
+
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensor"));
     }
 
@@ -107,9 +111,6 @@ public class TripService extends Service {
     /**
      * where we get the sensor data
      */
-    private long lastGPS = 0;
-    private long lastSpeedNonzero = 0;
-    private boolean stoprecording = false;
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -117,37 +118,23 @@ public class TripService extends Service {
             Trace trace = new Trace();
             trace.fromJson(message);
 
-            if(lastSpeedNonzero == 0 && lastGPS == 0) {
-                lastSpeedNonzero = trace.time;
-                lastGPS = trace.time;
-            }
-
             if(trace.type.compareTo(Trace.GPS) == 0) {
                 Log.d(TAG, "Got message: " + trace.toJson());
-
-                if(trace.values[2] != 0.0) {
-                    lastSpeedNonzero = trace.time;
-                }
-                lastGPS = trace.time;
 
                 trace = calculateTraceByGPS(trace);
                 curtrip_.addGPS(trace);
                 sendTrip(trace);
-            } else if(trace.type.compareTo(Trace.ACCELEROMETER) == 0) {
-                sendTrip(trace);
             } else {
 
             }
 
-            long curtime = trace.time;
-            if(curtime - lastSpeedNonzero > Constants.kInactiveDuration || curtime - lastGPS > Constants.kInactiveDuration) {
-                stoprecording = true;
-            } else {
-                stoprecording = false;
-            }
-            if(dbHelper_.isOpen() && stoprecording == false) {
+            if(dbHelper_.isOpen()) {
                 dbHelper_.insertSensorData(trace);
             }
+
+            processing_.processTrace(trace);
+
+            Log.d(TAG, String.valueOf(processing_.number_of_orientation_changed));
         }
 
         private Trace calculateTraceByGPS(Trace trace) {

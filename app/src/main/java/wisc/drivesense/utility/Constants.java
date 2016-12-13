@@ -50,6 +50,7 @@ public class Constants {
 
     public static final long kInactiveDuration = 1 * 60 * 1000; //millisecond
     public static final long kFileUploadMaxSize = 10 * 1000000; //byte
+    public static final double kOrientationChangeVarianceThreshold = 1.2;
 
 
 }
