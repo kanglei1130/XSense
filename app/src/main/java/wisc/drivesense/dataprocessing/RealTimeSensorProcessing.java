@@ -272,7 +272,7 @@ public class RealTimeSensorProcessing {
     }
 
     private List<Trace> orientation_buffer_ = new ArrayList<Trace>();
-    private boolean orientation_changing_ = false;
+    public boolean orientation_changing_ = false;
     public int number_of_orientation_changed = 0;
 
     public void detectOrientationChange(Trace accelerometer) {
@@ -297,20 +297,28 @@ public class RealTimeSensorProcessing {
     }
 
     private List<Trace> mv_buffer_ = new ArrayList<Trace>();
-    private double avg_mv_ = 0.0;
+    public double avg_mv_ = 0.0;
     private int mv_counter_ = 0;
     public void monitorStability(Trace accelerometer) {
 
         if(this.orientation_changing_ == true) {
             mv_buffer_.clear();
+            avg_mv_ = 0.0;
+            mv_counter_ = 0;
+            return;
         }
 
         mv_buffer_.add(accelerometer);
-        if(mv_buffer_.size() > 600) mv_buffer_.remove(0);
-
+        if(mv_buffer_.size() > 600) {
+            mv_buffer_.remove(0);
+        } else {
+            return;
+        }
         double m2 = calculateClusterVariance(mv_buffer_);
+
         double sum = avg_mv_ * mv_counter_ + m2;
-        avg_mv_ = sum / (++mv_counter_);
+        ++mv_counter_;
+        avg_mv_ = sum / mv_counter_;
     }
 
 }

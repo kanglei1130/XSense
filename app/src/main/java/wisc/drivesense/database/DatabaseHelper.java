@@ -29,12 +29,18 @@ public class DatabaseHelper {
 
     // Database Version
     private static final String DATABASE_NAME = "summary.db";
+
     private static final String TABLE_META = "meta";
     private static final String CREATE_TABLE_META = "CREATE TABLE IF NOT EXISTS "
             + TABLE_META + "(starttime INTEGER, endtime INTEGER, distance REAL, score REAL, deleted INTEGER, uploaded INTEGER, email TEXT);";
+
     private static final String TABLE_USER = "user";
     private static final String CREATE_TABLE_USER = "CREATE TABLE IF NOT EXISTS "
             + TABLE_USER + "(email TEXT, firstname TEXT, lastname TEXT, password TEXT, loginstatus INTEGER);";
+
+    private static final String TABLE_BEHAVIOR = "behavior";
+    private static final String CREATE_TABLE_BEHAVIOR = "CREATE TABLE IF NOT EXISTS "
+            + TABLE_BEHAVIOR + "(triptime INTEGER, begintime INTEGER, finishtime INTEGER, behavior TEXT, sensor INTEGER);";
 
 
     // Table Names

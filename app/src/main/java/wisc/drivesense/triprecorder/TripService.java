@@ -11,12 +11,15 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import wisc.drivesense.database.DatabaseHelper;
 import wisc.drivesense.dataprocessing.RealTimeSensorProcessing;
 import wisc.drivesense.utility.Constants;
+import wisc.drivesense.utility.Message;
 import wisc.drivesense.utility.Rating;
 import wisc.drivesense.utility.Trace;
 import wisc.drivesense.utility.Trip;
@@ -69,6 +72,7 @@ public class TripService extends Service {
 
         if(curtrip_.getDistance() >= Constants.kTripMinimumDistance && curtrip_.getDuration() >= Constants.kTripMinimumDuration) {
             Toast.makeText(this, "Saving trip in background!", Toast.LENGTH_SHORT).show();
+            recordingDrivingBehaviors();
             dbHelper_.insertTrip(curtrip_);
         } else {
             Toast.makeText(this, "Trip too short, not saved!", Toast.LENGTH_SHORT).show();
@@ -79,6 +83,16 @@ public class TripService extends Service {
         stopSelf();
     }
 
+    private void recordingDrivingBehaviors() {
+        int numberofoc = processing_.number_of_orientation_changed;
+        double mv = (1.0 - Math.min(processing_.avg_mv_, 1.0))/0.01;
+        if(mv == 100.0) {
+            mv = 0.0;
+        }
+        double stability = mv;
+        curtrip_.numberOfOrientationChanges_ = numberofoc;
+        curtrip_.mountingStability_ = stability;
+    }
 
 
     private void startService() {
@@ -107,7 +121,6 @@ public class TripService extends Service {
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensor"));
     }
 
-
     /**
      * where we get the sensor data
      */
@@ -131,22 +144,44 @@ public class TripService extends Service {
             if(dbHelper_.isOpen()) {
                 dbHelper_.insertSensorData(trace);
             }
+            processSensorData(trace);
+        }
 
+        private void processSensorData(Trace trace) {
             processing_.processTrace(trace);
+            if(processing_.orientation_changing_) {
+                Message msg = new Message(Message.ORIENTATION_CHANGE, "Orientation Changing: YES");
+                sendMessage(msg);
+            } else {
+                Message msg = new Message(Message.ORIENTATION_CHANGE, "Orientation Changing: NO");
+                sendMessage(msg);
+            }
 
-            Log.d(TAG, String.valueOf(processing_.number_of_orientation_changed));
+            double mv = (1.0 - Math.min(processing_.avg_mv_, 1.0))/0.01;
+            if(mv == 100.0) {
+                mv = 0.0;
+            }
+
+            Message stability = null;
+            if(mv == 0.0) {
+                stability = new Message(Message.STABILITY, "Mounting Stability: Training");
+            } else {
+                stability = new Message(Message.STABILITY, "Mounting Stability:" + String.format("%.0f", mv) + "%");
+            }
+
+            sendMessage(stability);
         }
 
         private Trace calculateTraceByGPS(Trace trace) {
-            int brake = rating_.readingData(trace);
+            double brake = rating_.readingData(trace);
+            double acc_y = 0.0;
             //create a new trace for GPS, since we use GPS to capture driving behaviors
             Trace ntrace = new Trace(6);
             ntrace.type = trace.type;
             ntrace.time = trace.time;
             System.arraycopy(trace.values, 0, ntrace.values, 0, trace.values.length);
-            ntrace.values[5] = ntrace.values[3];
-            ntrace.values[3] = (float)curtrip_.getScore();
-            ntrace.values[4] = (float)brake;
+            ntrace.values[4] = brake;
+            ntrace.values[5] = acc_y;
             return ntrace;
         }
     };
@@ -154,6 +189,12 @@ public class TripService extends Service {
     private void sendTrip(Trace trace) {
         Intent intent = new Intent("driving");
         intent.putExtra("trip", trace.toJson());
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void sendMessage(Message message) {
+        Intent intent = new Intent("sensormessage");
+        intent.putExtra("message", new Gson().toJson(message));
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 

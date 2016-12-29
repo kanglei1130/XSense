@@ -107,4 +107,24 @@
         android:visibility="gone"
         />
 
+    <TextView
+        android:id="@+id/orientation"
+        android:text="Orientation Changing: N/A"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="44dp"
+        android:textSize="20sp"
+
+        android:layout_below="@+id/maintoolbar"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/stability"
+        android:text="Mounting Stability: N/A"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_below="@id/orientation"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

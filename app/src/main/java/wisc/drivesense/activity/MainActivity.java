@@ -31,6 +31,7 @@ import java.io.File;
 import wisc.drivesense.R;
 import wisc.drivesense.triprecorder.TripService;
 import wisc.drivesense.utility.Constants;
+import wisc.drivesense.utility.Message;
 import wisc.drivesense.utility.Trace;
 import wisc.drivesense.utility.Trip;
 
@@ -46,8 +47,10 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvSpeed = null;
     private TextView tvMile = null;
-    private TextView tvTilt = null;
     private Button btnStart = null;
+
+    private TextView tvOrientation = null;
+    private TextView tvStability = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
         tvSpeed = (TextView) findViewById(R.id.textspeed);
         tvMile = (TextView) findViewById(R.id.milesdriven);
         btnStart = (Button) findViewById(R.id.btnstart);
+
+        tvOrientation = (TextView) findViewById(R.id.orientation);
+        tvStability = (TextView) findViewById(R.id.stability);
 
 
         android.support.v7.widget.Toolbar mToolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.maintoolbar);
@@ -197,7 +203,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "start running");
 
         //curtrip_ = new Trip(System.currentTimeMillis());
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("driving"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mTraceReceiver, new IntentFilter("driving"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensormessage"));
+
 
         mTripServiceIntent = new Intent(this, TripService.class);
         mTripConnection = new TripServiceConnection();
@@ -211,10 +219,14 @@ public class MainActivity extends AppCompatActivity {
     private synchronized void stopRunning() {
 
         Log.d(TAG, "Stopping live data..");
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mTraceReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 
         tvSpeed.setText(String.format("%.1f", 0.0));
         tvMile.setText(String.format("%.2f", 0.00));
+
+        tvOrientation.setText("Orientation Changing: N/A");
+        tvStability.setText("Mounting Stability: N/A");
 
         if(MainActivity.isServiceRunning(this, TripService.class) == true) {
             Log.d(TAG, "Stop driving detection service!!!");
@@ -240,8 +252,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * where we get the sensor data
      */
-
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mTraceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra("trip");
@@ -258,6 +269,26 @@ public class MainActivity extends AppCompatActivity {
                         displayWarning();
                     }
                     */
+                }
+            }
+        }
+    };
+
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String msg = intent.getStringExtra("message");
+            Gson gson = new Gson();
+            Message message = gson.fromJson(msg, Message.class);
+
+            if(curtrip_ != null) {
+                if(message.type.equals(Message.ORIENTATION_CHANGE)) {
+                    tvOrientation.setText(message.value);
+                } else if(message.type.equals(Message.STABILITY)) {
+                    tvStability.setText(message.value);
+                } else {
+
                 }
             }
         }

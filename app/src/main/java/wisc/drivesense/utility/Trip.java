@@ -18,13 +18,14 @@ public class Trip implements Serializable {
     private List<Trace> gps_;
     private Trace start_ = null;
     private Trace dest_ = new Trace();
-    private double tilt_;
 
-    //private Rating rating = null;
+
+
+    public int numberOfOrientationChanges_ = 0;
+    public double mountingStability_ = 0.0;
 
     private String TAG = "Trip";
 
-    //private DatabaseHelper dbHelper_ = null;
 
     public Trip (long time) {
         gps_ = new ArrayList<Trace>();
@@ -37,8 +38,6 @@ public class Trip implements Serializable {
     public void setEndTime(long time) {this.endTime_ = time;}
     public void setDistance(double dist) {this.distance_ = dist;}
 
-    public void setTilt(double tilt) {this.tilt_ = tilt;}
-    public double getTilt() {return this.tilt_;}
 
 
     public long getStartTime() {
