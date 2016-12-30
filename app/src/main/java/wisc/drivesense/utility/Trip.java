@@ -76,7 +76,7 @@ public class Trip implements Serializable {
             start_.copyTrace(trace);
         }
         dest_.copyTrace(trace);
-        speed_ = trace.values[2];
+        speed_ = trace.values[3];
         this.endTime_ = trace.time;
 
         int sz = gps_.size();
@@ -100,6 +100,50 @@ public class Trip implements Serializable {
 
     public List<Trace> getGPSPoints() {
         return gps_;
+    }
+
+
+    public double gpspercent_ = 0.0;
+    public double sensorpercent_ = 0.0;
+
+    public int brakeByGPS_ = 0;
+    public int brakeBySensor_ = 0;
+    public int brakeByXSense_ = 0;
+    public void calculateTripMeta() {
+        if(this.gps_ == null || this.gps_.size() <= 2) {
+            return;
+        }
+        int gpscount = 0;
+        boolean usegps = false;
+        for(int i = 0; i < this.gps_.size(); ++i) {
+            Trace cur = this.gps_.get(i);
+            double speed = cur.values[3];
+            usegps = false;
+            if(speed >= 10) {
+                gpscount ++;
+                usegps = true;
+            } else {
+                if(cur.values[5] == 0.0) {
+                    gpscount ++;
+                    usegps = true;
+                }
+            }
+
+            if(cur.values[4] < -2.5) {
+                brakeByGPS_ ++;
+            }
+            if(cur.values[5] < -2.5) {
+                brakeBySensor_ ++;
+            }
+            if(usegps && cur.values[4] < -2.5) {
+                brakeByXSense_ ++;
+            }
+            if(!usegps && cur.values[5] < -2.5) {
+                brakeByXSense_ ++;
+            }
+        }
+        this.gpspercent_ = (int)(gpscount * 100.0/(this.gps_.size()));
+        this.sensorpercent_ = 100 - this.gpspercent_;
     }
 
 

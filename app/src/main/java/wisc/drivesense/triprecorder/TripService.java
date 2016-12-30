@@ -174,7 +174,8 @@ public class TripService extends Service {
 
         private Trace calculateTraceByGPS(Trace trace) {
             double brake = rating_.readingData(trace);
-            double acc_y = 0.0;
+            double sign = brake >= 0.0? 1.0 : -1.0;
+            double acc_y = processing_.acceleration_ * sign;
             //create a new trace for GPS, since we use GPS to capture driving behaviors
             Trace ntrace = new Trace(6);
             ntrace.type = trace.type;

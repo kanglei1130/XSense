@@ -29,6 +29,7 @@ public class RealTimeSensorProcessing {
     private Trace curSmoothedGyroscope = null;
     final int kWindowSize = 15;
 
+    private Trace curProjectedAccelerometer = null;
 
 
     /**
@@ -93,6 +94,16 @@ public class RealTimeSensorProcessing {
 
     private void onGPSChanged(Trace gps) {
 
+    }
+
+    public double acceleration_ = 0.0;
+    private void projectAccelerometer() {
+        if(this.initRM_ == null) {
+            this.acceleration_ = 0.0;
+            return;
+        }
+        Trace curproj = Formulas.rotate(this.curSmoothedAccelerometer, this.initRM_.values);
+        this.acceleration_ = Math.sqrt(Math.pow(curproj.values[0], 2.0) + Math.pow(curproj.values[1], 2.0));
     }
 
     private void onAccelerometerChanged(Trace accelerometer) {
@@ -305,6 +316,7 @@ public class RealTimeSensorProcessing {
             mv_buffer_.clear();
             avg_mv_ = 0.0;
             mv_counter_ = 0;
+            this.initRM_ = null;
             return;
         }
 

@@ -32,16 +32,17 @@ public class DatabaseHelper {
 
     private static final String TABLE_META = "meta";
     private static final String CREATE_TABLE_META = "CREATE TABLE IF NOT EXISTS "
-            + TABLE_META + "(starttime INTEGER, endtime INTEGER, distance REAL, score REAL, deleted INTEGER, uploaded INTEGER, email TEXT);";
+            + TABLE_META + "(starttime INTEGER, endtime INTEGER, distance REAL, score REAL, deleted INTEGER, uploaded INTEGER, email TEXT, orientation_change INTEGER, stability REAL);";
 
     private static final String TABLE_USER = "user";
     private static final String CREATE_TABLE_USER = "CREATE TABLE IF NOT EXISTS "
             + TABLE_USER + "(email TEXT, firstname TEXT, lastname TEXT, password TEXT, loginstatus INTEGER);";
 
+    /*
     private static final String TABLE_BEHAVIOR = "behavior";
     private static final String CREATE_TABLE_BEHAVIOR = "CREATE TABLE IF NOT EXISTS "
             + TABLE_BEHAVIOR + "(triptime INTEGER, begintime INTEGER, finishtime INTEGER, behavior TEXT, sensor INTEGER);";
-
+    */
 
     // Table Names
     private static final String TABLE_ACCELEROMETER = "accelerometer";
@@ -138,6 +139,9 @@ public class DatabaseHelper {
         values.put("uploaded", 0);
         //assign to current user
         values.put("email", "");
+        values.put("orientation_change", trip.numberOfOrientationChanges_);
+        values.put("stability", trip.mountingStability_);
+
         meta_.insert(TABLE_META, null, values);
     }
 
@@ -181,9 +185,9 @@ public class DatabaseHelper {
             if(cursor.getCount() == 0) {
                 break;
             }
-            Trace trace = new Trace(5);
+            Trace trace = new Trace(6);
             trace.time = cursor.getLong(0);
-            for(int i = 0; i < 5; ++i) {
+            for(int i = 0; i < 6; ++i) {
                 trace.values[i] = cursor.getFloat(i + 1);
             }
             trace.type = Trace.GPS;
@@ -199,11 +203,17 @@ public class DatabaseHelper {
         double dist = cursor.getDouble(2);
         double score = cursor.getDouble(3);
         int deleted = cursor.getInt(4);
+
+        int orientation_changed = cursor.getInt(7);
+        double stability = cursor.getDouble(8);
         Trip trip = new Trip(stime);
         trip.setScore(score);
         trip.setStatus(deleted == 1? 0 : 1);
         trip.setEndTime(etime);
         trip.setDistance(dist);
+
+        trip.numberOfOrientationChanges_ = orientation_changed;
+        trip.mountingStability_ = stability;
         if(withgps) {
             trip.setGPSPoints(this.getGPSPoints(stime));
         }

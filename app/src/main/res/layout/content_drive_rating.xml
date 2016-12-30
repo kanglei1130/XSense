@@ -31,7 +31,7 @@
         android:layout_centerHorizontal="true"
         android:orientation="horizontal">
         <RadioButton
-            android:id="@+id/radioButtonSpeed"
+            android:id="@+id/radioButtonGPS"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="GPS"
@@ -39,14 +39,14 @@
             android:onClick="onRadioButtonClicked"
             />
         <RadioButton
-            android:id="@+id/radioButtonScore"
+            android:id="@+id/radioButtonSensors"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sensors"
             android:onClick="onRadioButtonClicked"
             />
         <RadioButton
-            android:id="@+id/radioButtonBrake"
+            android:id="@+id/radioButtonMixed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Mixed"

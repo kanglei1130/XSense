@@ -78,6 +78,8 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
             //crash when there is no gps
             Log.d(TAG, String.valueOf(points_.size()));
 
+            trip_.calculateTripMeta();
+
         }
         ratingView = (TextView) findViewById(R.id.rating);
         ratingView.setText("N/A");
@@ -126,7 +128,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
         if(sz >= 2) {
             //deal with orientation change
-            RadioButton rButton = (RadioButton) findViewById(R.id.radioButtonSpeed);
+            RadioButton rButton = (RadioButton) findViewById(R.id.radioButtonGPS);
             rButton.setChecked(true);
             plotRoute();
 
@@ -156,9 +158,9 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
     private int getButtonIndex() {
         int index = -1;
-        RadioButton speedButton = (RadioButton) findViewById(R.id.radioButtonSpeed);
-        RadioButton scoreButton = (RadioButton) findViewById(R.id.radioButtonScore);
-        RadioButton brakeButton = (RadioButton) findViewById(R.id.radioButtonBrake);
+        RadioButton speedButton = (RadioButton) findViewById(R.id.radioButtonGPS);
+        RadioButton scoreButton = (RadioButton) findViewById(R.id.radioButtonSensors);
+        RadioButton brakeButton = (RadioButton) findViewById(R.id.radioButtonMixed);
         if(speedButton.isChecked()) {
             index = 2;
         } else if(scoreButton.isChecked()) {
@@ -185,56 +187,44 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
             return;
         }
         //TODO: change it to display according to speed
-        // remove zero points
-        ListIterator<Trace> it = points_.listIterator();
-        while (it.hasNext()) {
-            Trace cur = it.next();
-            if(cur.values[2] == 0.0) {
-                it.remove();
-            }
-        }
-        //
         int sz = points_.size();
-        Log.d(TAG, "gps size after remove zeros" + sz);
 
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
         int [] colors = {Color.GREEN, Color.BLUE, Color.YELLOW, Color.RED};
         List<BitmapDescriptor> bitmapDescriptors = producePoints(colors);
 
+
         // plot the route on the google map
-        int rate = sz/1200 + 1;
-        for (int i = 0; i < sz; i+=rate) {
+        boolean usegps = false;
+        for (int i = 0; i < sz; ++i) {
             Trace point = points_.get(i);
+
+
+            double speed = point.values[3];
+            usegps = false;
+            if(speed >= 10) {
+                usegps = true;
+            } else {
+                if(point.values[5] == 0.0) {
+                    usegps = true;
+                }
+            }
 
             BitmapDescriptor bitmapDescriptor = null;
 
 
+            double brake = 0.0;
 
             if(index == 2) {
-                //speed
-                //double speed = point.values[2];
-                //bitmapDescriptor = bitmapDescriptors.get(Math.min((int) (speed / 5.0), colors.length - 1));
-
-                ratingView.setText("Hard Brakes: 3");
-
+                brake = point.values[4];
             } else if(index == 3) {
-                //score
-                //double score = point.values[3];
-                //bitmapDescriptor = bitmapDescriptors.get(Math.min((int)(10.0 - score), colors.length - 1));
-
-                ratingView.setText("Hard Brakes: 2 \n Orientation Changes: 0 \n Tightness: 90%");
-
-
+                brake = point.values[5];
             } else {
-                //brake behaviors
-
-
-                ratingView.setText("Hard Brakes: 2 \n GPS Used: 80% \n Sensors Used: 20%");
+                if (usegps) brake = point.values[4];
+                else brake = point.values[5];
             }
-
-            double brake = point.values[4];
-            if(brake < 0) {
+            if(brake < -2.5) {
                 //bitmapDescriptor = bitmapDescriptors.get(3);
                 bitmapDescriptor =  BitmapDescriptorFactory.fromResource(R.drawable.attention_24);
             } else {
@@ -245,6 +235,15 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
             Marker marker = map_.addMarker(markerOptions);
             builder.include(marker.getPosition());
         }
+
+        if(index == 2) {
+            ratingView.setText("Hard Brakes: " + trip_.brakeByGPS_);
+        } else if(index == 3) {
+            ratingView.setText("Hard Brakes: " + trip_.brakeBySensor_ +" \n Orientation Changes: " + trip_.numberOfOrientationChanges_+ " \n Stability: " + trip_.mountingStability_ + "%");
+        } else {
+            ratingView.setText("Hard Brakes: " + trip_.brakeByXSense_ + " \n GPS Used: " + trip_.gpspercent_ + "% \n Sensors Used: " + trip_.sensorpercent_ + "%");
+        }
+
 
         // market the starting and ending points
         LatLng start = new LatLng(trip_.getStartPoint().values[0], trip_.getStartPoint().values[1]);
