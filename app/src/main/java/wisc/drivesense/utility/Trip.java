@@ -115,7 +115,7 @@ public class Trip implements Serializable {
         }
         int gpscount = 0;
         boolean usegps = false;
-        for(int i = 0; i < this.gps_.size(); ++i) {
+        for(int i = 10; i < this.gps_.size(); ++i) {
             Trace cur = this.gps_.get(i);
             double speed = cur.values[3];
             usegps = false;
@@ -142,7 +142,7 @@ public class Trip implements Serializable {
                 brakeByXSense_ ++;
             }
         }
-        this.gpspercent_ = (int)(gpscount * 100.0/(this.gps_.size()));
+        this.gpspercent_ = (int)(gpscount * 100.0/(this.gps_.size() - 10));
         this.sensorpercent_ = 100 - this.gpspercent_;
     }
 

@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                     btnStart.setText(R.string.start_button);
 
 
-                    showDriveRating();
+                    //showDriveRating();
                 }
             }
         });
@@ -295,14 +295,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-    public void showDriveRating() {
-        Log.d(TAG, "in showDriveRating");
-        Gson gson = new Gson();
-        Log.d(TAG, gson.toJson(curtrip_));
-        Intent intent = new Intent(this, MapActivity.class);
-        intent.putExtra("Current Trip", curtrip_);
-        startActivity(intent);
-    }
 
     public void showSettings() {
         Intent intent = new Intent(this, SettingActivity.class);

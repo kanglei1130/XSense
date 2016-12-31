@@ -16,7 +16,7 @@ import java.util.List;
 
 public class RealTimeSensorProcessing {
 
-    private static final String TAG = "RealTimeSensorProcessing";
+    private static final String TAG = "RealTimeProcessing";
 
     public RealTimeSensorProcessing() {
 
@@ -114,6 +114,8 @@ public class RealTimeSensorProcessing {
         detectOrientationChange(curSmoothedAccelerometer);
         monitorStability(curSmoothedAccelerometer);
 
+        projectAccelerometer();
+
         if(window_accelerometer.size() >= kWindowSize) {
             stopped_ = stopped(window_accelerometer);
 
@@ -128,7 +130,12 @@ public class RealTimeSensorProcessing {
                         gravity_ += tmp.values[j] * tmp.values[j];
                     }
                     gravity_ = Math.sqrt(gravity_);
+
+                }
+
+                if(stopped_ == true && initRM_ == null) {
                     initRM_ = PreProcess.getAverage(window_rotation_matrix);
+                    Log.d(TAG, "initRM is set");
                 }
 
                 if(null == trainsample_) {

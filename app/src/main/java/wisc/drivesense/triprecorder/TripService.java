@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import wisc.drivesense.activity.MapActivity;
 import wisc.drivesense.database.DatabaseHelper;
 import wisc.drivesense.dataprocessing.RealTimeSensorProcessing;
 import wisc.drivesense.utility.Constants;
@@ -74,6 +75,8 @@ public class TripService extends Service {
             Toast.makeText(this, "Saving trip in background!", Toast.LENGTH_SHORT).show();
             recordingDrivingBehaviors();
             dbHelper_.insertTrip(curtrip_);
+
+            showDriveRating();
         } else {
             Toast.makeText(this, "Trip too short, not saved!", Toast.LENGTH_SHORT).show();
             dbHelper_.deleteTrip(curtrip_.getStartTime());
@@ -94,6 +97,15 @@ public class TripService extends Service {
         curtrip_.mountingStability_ = stability;
     }
 
+
+    public void showDriveRating() {
+        Log.d(TAG, "in showDriveRating");
+        Gson gson = new Gson();
+        Log.d(TAG, gson.toJson(curtrip_));
+        Intent intent = new Intent(this, MapActivity.class);
+        intent.putExtra("Current Trip", curtrip_);
+        startActivity(intent);
+    }
 
     private void startService() {
         _isRunning.set(true);

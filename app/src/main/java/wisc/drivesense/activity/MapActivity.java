@@ -175,6 +175,9 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
 
     private void plotRoute() {
+
+        map_.clear();
+
         int index = getButtonIndex();
         Log.d(TAG, "plot:" + String.valueOf(index));
         if(index < 2 || index > 4) {
@@ -195,6 +198,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
         List<BitmapDescriptor> bitmapDescriptors = producePoints(colors);
 
 
+
         // plot the route on the google map
         boolean usegps = false;
         for (int i = 0; i < sz; ++i) {
@@ -211,6 +215,10 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
                 }
             }
 
+            if(!usegps) {
+                Log.d(TAG, "using sensor" + point.toJson());
+            }
+
             BitmapDescriptor bitmapDescriptor = null;
 
 
@@ -218,17 +226,21 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
             if(index == 2) {
                 brake = point.values[4];
+                bitmapDescriptor = bitmapDescriptors.get(0);
             } else if(index == 3) {
                 brake = point.values[5];
+                bitmapDescriptor = bitmapDescriptors.get(1);
             } else {
-                if (usegps) brake = point.values[4];
-                else brake = point.values[5];
+                if (usegps) {
+                    brake = point.values[4];
+                    bitmapDescriptor = bitmapDescriptors.get(0);
+                } else {
+                    brake = point.values[5];
+                    bitmapDescriptor = bitmapDescriptors.get(1);
+                }
             }
-            if(brake < -2.5) {
-                //bitmapDescriptor = bitmapDescriptors.get(3);
+            if(brake < -2.5 && i >= 10) {
                 bitmapDescriptor =  BitmapDescriptorFactory.fromResource(R.drawable.attention_24);
-            } else {
-                bitmapDescriptor = bitmapDescriptors.get(0);
             }
 
             MarkerOptions markerOptions = new MarkerOptions().position(new LatLng(point.values[0], point.values[1])).icon(bitmapDescriptor);
@@ -239,7 +251,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
         if(index == 2) {
             ratingView.setText("Hard Brakes: " + trip_.brakeByGPS_);
         } else if(index == 3) {
-            ratingView.setText("Hard Brakes: " + trip_.brakeBySensor_ +" \n Orientation Changes: " + trip_.numberOfOrientationChanges_+ " \n Stability: " + trip_.mountingStability_ + "%");
+            ratingView.setText("Hard Brakes: " + trip_.brakeBySensor_ +" \n Orientation Changes: " + trip_.numberOfOrientationChanges_+ " \n Stability: " + (int)trip_.mountingStability_ + "%");
         } else {
             ratingView.setText("Hard Brakes: " + trip_.brakeByXSense_ + " \n GPS Used: " + trip_.gpspercent_ + "% \n Sensors Used: " + trip_.sensorpercent_ + "%");
         }
@@ -274,21 +286,6 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
         Log.d(TAG, view.getId() + " is checked: " + checked);
         // Check which radio button was clicked
         plotRoute();
-        /*
-        switch(view.getId()) {
-            case R.id.radioButtonSpeed:
-                plotRoute();
-                break;
-            case R.id.radioButtonScore:
-                plotRoute();
-                break;
-            case R.id.radioButtonBrake:
-                plotRoute();
-                break;
-            default:
-                break;
-        }
-        */
     }
 
 
