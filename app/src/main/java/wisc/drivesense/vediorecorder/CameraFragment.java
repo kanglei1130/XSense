@@ -515,6 +515,11 @@ public class CameraFragment extends Fragment {
         return Constants.kVideoFolder + System.currentTimeMillis() + ".mp4";
     }
 
+    public void setRecordingPath(String path) {
+        mNextVideoAbsolutePath = path;
+    }
+
+
     public void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
