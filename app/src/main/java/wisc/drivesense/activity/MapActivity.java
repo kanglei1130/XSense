@@ -1,12 +1,15 @@
 package wisc.drivesense.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -61,7 +64,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
         Toolbar ratingToolbar = (Toolbar) findViewById(R.id.tool_bar_rating);
 
         ratingToolbar.setTitle("Your Trip");
-        ratingToolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        //ratingToolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
         ratingToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,6 +103,11 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
     @Override
     public void onMapReady(GoogleMap map) {
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
         map_ = map;
         map_.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         map_.setMyLocationEnabled(true);
@@ -239,7 +247,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
                     bitmapDescriptor = bitmapDescriptors.get(1);
                 }
             }
-            if(brake < -2.5 && i >= 10) {
+            if(brake < Constants.kHardBrakeThreshold && i >= 10) {
                 bitmapDescriptor =  BitmapDescriptorFactory.fromResource(R.drawable.attention_24);
             }
 

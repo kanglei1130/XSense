@@ -56,13 +56,13 @@ public class TripAdapter extends ArrayAdapter<Trip> {
         double duration = trip.getDuration();
         double miles = trip.getDistance() * Constants.kMeterToMile;
         double score = trip.getScore();
+        //double gpspercent = trip.gpspercent_;
 
         tvStart.setText(format.format(starting));
         tvEnd.setText(format.format(ending));
         tvDuration.setText(String.format("%.2f", duration/(1000*60.0)) + " mins");
         tvMiles.setText(String.format("%.2f", miles) + " miles");
         tvScore.setText(String.format("%.1f", score));
-
 
         return convertView;
     }

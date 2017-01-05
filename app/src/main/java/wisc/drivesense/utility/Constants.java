@@ -37,7 +37,9 @@ public class Constants {
     public static final String kSignInURL = kDomain + "/androidsignin";
     public static final String kSignUpURL = kDomain + "/androidsignup";
 
-    public static final String kDBFolder = "/data/data/wisc.drivesense/databases/";
+    public static final String kPackageName = "wisc.drivesense";
+    public static final String kDBFolder = "/data/data/" + kPackageName + "/databases/";
+    public static final String kVideoFolder = "/data/data/" + kPackageName + "/videos/";
 
     public static final String kUserEmail = "lkang@cs.wisc.edu";
 
@@ -51,6 +53,8 @@ public class Constants {
     public static final long kInactiveDuration = 1 * 60 * 1000; //millisecond
     public static final long kFileUploadMaxSize = 10 * 1000000; //byte
     public static final double kOrientationChangeVarianceThreshold = 1.2;
+
+    public static final double kHardBrakeThreshold = -3.0;
 
 
 }

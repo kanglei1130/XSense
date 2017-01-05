@@ -1,6 +1,7 @@
 
 package wisc.drivesense.activity;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,8 +9,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,11 +23,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-//import com.facebook.FacebookSdk;
-//import com.facebook.appevents.AppEventsLogger;
 
 import com.google.gson.Gson;
 
@@ -34,6 +36,7 @@ import wisc.drivesense.utility.Constants;
 import wisc.drivesense.utility.Message;
 import wisc.drivesense.utility.Trace;
 import wisc.drivesense.utility.Trip;
+import wisc.drivesense.vediorecorder.CameraFragment;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -52,32 +55,70 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvOrientation = null;
     private TextView tvStability = null;
 
+
+    private boolean mIsRecordingVideo = false;
+
+    private CameraFragment camerafragment = null;
+
+    private static final String[] PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //ask for permission first
+        int permissionCheck = isAllPermissionGranted();
+        if(permissionCheck == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, 1001);
+        }
 
         // Initializing Facebook Integration
+
+        setupViews();
+        setupFolders();
+        addListenerOnButton();
+
+        //findViewById(R.id.textspeed).setVisibility(View.GONE);
+        camerafragment = CameraFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, camerafragment)
+                .commit();
+
+    }
+
+
+    private void setupViews() {
+        android.support.v7.widget.Toolbar mToolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.maintoolbar);
+        setSupportActionBar(mToolbar);
 
         tvSpeed = (TextView) findViewById(R.id.textspeed);
         tvMile = (TextView) findViewById(R.id.milesdriven);
         btnStart = (Button) findViewById(R.id.btnstart);
 
-        tvOrientation = (TextView) findViewById(R.id.orientation);
-        tvStability = (TextView) findViewById(R.id.stability);
+        //tvOrientation = (TextView) findViewById(R.id.orientation);
+        //tvStability = (TextView) findViewById(R.id.stability);
+    }
 
-
-        android.support.v7.widget.Toolbar mToolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.maintoolbar);
-        setSupportActionBar(mToolbar);
-
+    //setup folders to store database files and video files
+    private void setupFolders () {
         File dbDir = new File(Constants.kDBFolder);
+        File videoDir = new File(Constants.kVideoFolder);
         if (!dbDir.exists()) {
             dbDir.mkdirs();
         }
-        addListenerOnButton();
-        //FacebookSdk.sdkInitialize(getApplicationContext());
-        //AppEventsLogger.activateApp(this);
+        if(!videoDir.exists()) {
+            videoDir.mkdir();
+        }
     }
 
 
@@ -171,8 +212,6 @@ public class MainActivity extends AppCompatActivity {
                     stopRunning();
                     btnStart.setBackgroundResource(R.drawable.start_button);
                     btnStart.setText(R.string.start_button);
-
-
                     //showDriveRating();
                 }
             }
@@ -204,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
 
         //curtrip_ = new Trip(System.currentTimeMillis());
         LocalBroadcastManager.getInstance(this).registerReceiver(mTraceReceiver, new IntentFilter("driving"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensormessage"));
+       // LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensormessage"));
 
 
         mTripServiceIntent = new Intent(this, TripService.class);
@@ -214,19 +253,22 @@ public class MainActivity extends AppCompatActivity {
             bindService(mTripServiceIntent, mTripConnection, Context.BIND_AUTO_CREATE);
             startService(mTripServiceIntent);
         }
+
+        mIsRecordingVideo = true;
+        camerafragment.startRecordingVideo();
     }
 
     private synchronized void stopRunning() {
 
         Log.d(TAG, "Stopping live data..");
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mTraceReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+       // LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 
-        tvSpeed.setText(String.format("%.1f", 0.0));
-        tvMile.setText(String.format("%.2f", 0.00));
+        tvSpeed.setText("null");
+        tvMile.setText("null");
 
-        tvOrientation.setText("Orientation Changing: N/A");
-        tvStability.setText("Mounting Stability: N/A");
+        //tvOrientation.setText("Orientation Changing: N/A");
+        //tvStability.setText("Mounting Stability: N/A");
 
         if(MainActivity.isServiceRunning(this, TripService.class) == true) {
             Log.d(TAG, "Stop driving detection service!!!");
@@ -236,16 +278,8 @@ public class MainActivity extends AppCompatActivity {
             mTripServiceIntent = null;
         }
 
-    }
-
-
-    private void displayWarning() {
-        Toast toast = new Toast(MainActivity.this);
-        ImageView view = new ImageView(MainActivity.this);
-        view.setImageResource(R.drawable.attention_512);
-
-        toast.setView(view);
-        toast.show();
+        mIsRecordingVideo = false;
+        camerafragment.stopRecordingVideo();
     }
 
     //
@@ -262,19 +296,15 @@ public class MainActivity extends AppCompatActivity {
                 if(trace.type.equals(Trace.GPS)) {
                     Log.d(TAG, "Got message: " + message);
                     curtrip_.addGPS(trace);
-                    tvSpeed.setText(String.format("%.1f", curtrip_.getSpeed()));
-                    tvMile.setText(String.format("%.2f", curtrip_.getDistance() * Constants.kMeterToMile));
-                    /*
-                    if(curtrip_.getSpeed() >= 5.0 && trace.values[2] < 0) {
-                        displayWarning();
-                    }
-                    */
+                    tvSpeed.setText(String.format("%.1f", curtrip_.getSpeed()) + "mph");
+                    tvMile.setText(String.format("%.2f", curtrip_.getDistance() * Constants.kMeterToMile) + "mi");
                 }
             }
         }
     };
 
 
+    /*
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -293,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
+    */
 
 
     public void showSettings() {
@@ -318,6 +348,33 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
+
+    /**
+     * persmission related, we request all the permissions all for good, refactor required for production usage
+     * @return
+     */
+    private int isAllPermissionGranted() {
+        for(int i = 0; i < PERMISSIONS.length; ++i) {
+            int permissionCheck = ContextCompat.checkSelfPermission(this, PERMISSIONS[i]);
+            if(permissionCheck == PackageManager.PERMISSION_DENIED) {
+                return PackageManager.PERMISSION_DENIED;
+            }
+        }
+        return PackageManager.PERMISSION_GRANTED;
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 1001: {
+                if (grantResults.length == PERMISSIONS.length && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Got permission to use location");
+                }
+            }
+        }
+    }
+
 
 }
 

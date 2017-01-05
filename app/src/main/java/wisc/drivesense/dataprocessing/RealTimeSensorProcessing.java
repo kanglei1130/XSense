@@ -98,7 +98,7 @@ public class RealTimeSensorProcessing {
 
     public double acceleration_ = 0.0;
     private void projectAccelerometer() {
-        if(this.initRM_ == null) {
+        if(this.initRM_ == null || this.horizontalRM_ == null) {
             this.acceleration_ = 0.0;
             return;
         }
@@ -324,6 +324,7 @@ public class RealTimeSensorProcessing {
             avg_mv_ = 0.0;
             mv_counter_ = 0;
             this.initRM_ = null;
+            this.horizontalRM_ = null;
             return;
         }
 

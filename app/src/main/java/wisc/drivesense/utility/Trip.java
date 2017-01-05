@@ -129,16 +129,16 @@ public class Trip implements Serializable {
                 }
             }
 
-            if(cur.values[4] < -2.5) {
+            if(cur.values[4] < Constants.kHardBrakeThreshold) {
                 brakeByGPS_ ++;
             }
-            if(cur.values[5] < -2.5) {
+            if(cur.values[5] < Constants.kHardBrakeThreshold) {
                 brakeBySensor_ ++;
             }
-            if(usegps && cur.values[4] < -2.5) {
+            if(usegps && cur.values[4] < Constants.kHardBrakeThreshold) {
                 brakeByXSense_ ++;
             }
-            if(!usegps && cur.values[5] < -2.5) {
+            if(!usegps && cur.values[5] < Constants.kHardBrakeThreshold) {
                 brakeByXSense_ ++;
             }
         }
