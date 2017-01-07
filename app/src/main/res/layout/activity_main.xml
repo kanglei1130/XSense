@@ -61,7 +61,7 @@
     <TextView
         android:text="0.0mph"
         android:textColor="#FFFFFF"
-        android:textSize="30sp"
+        android:textSize="35sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textspeed"
@@ -72,7 +72,7 @@
     <TextView
         android:text="0.00mi"
         android:textColor="#FFFFFF"
-        android:textSize="30sp"
+        android:textSize="35sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/milesdriven"

@@ -34,16 +34,17 @@ public class HistoryActivity extends Activity {
 
         setContentView(R.layout.activity_history);
 
+        /*
         android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.historytoolbar);
         toolbar.setTitle("Previous Trips");
-        //toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
-
+        */
         ListView listView = (ListView)findViewById(R.id.listView);
 
         dbHelper_ = new DatabaseHelper();

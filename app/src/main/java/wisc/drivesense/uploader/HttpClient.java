@@ -32,6 +32,7 @@ public class HttpClient {
         con.setDoInput(true);
         con.setDoOutput(true);
         con.setConnectTimeout(100 * 60);
+        con.setChunkedStreamingMode(1024);
         con.setRequestProperty("Connection", "Keep-Alive");
         con.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         con.connect();

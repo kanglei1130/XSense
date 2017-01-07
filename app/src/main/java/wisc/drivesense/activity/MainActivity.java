@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
         //ask for permission first
         int permissionCheck = isAllPermissionGranted();
-        if(permissionCheck == PackageManager.PERMISSION_DENIED) {
+        if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, 1001);
         }
 
@@ -128,9 +128,15 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             binder = ((TripService.TripServiceBinder)service);
             curtrip_ = binder.getTrip();
+
+            //start recording after the trip is started
+            mIsRecordingVideo = true;
+            camerafragment.setRecordingPath(Constants.kVideoFolder + curtrip_.getStartTime());
+            camerafragment.startRecordingVideo();
         }
         public void onServiceDisconnected(ComponentName className) {
             binder = null;
+
         }
     };
     private Intent mTripServiceIntent = null;
@@ -254,8 +260,6 @@ public class MainActivity extends AppCompatActivity {
             startService(mTripServiceIntent);
         }
 
-        mIsRecordingVideo = true;
-        camerafragment.startRecordingVideo();
     }
 
     private synchronized void stopRunning() {
@@ -278,8 +282,11 @@ public class MainActivity extends AppCompatActivity {
             mTripServiceIntent = null;
         }
 
-        mIsRecordingVideo = false;
-        camerafragment.stopRecordingVideo();
+
+        if(mIsRecordingVideo) {
+            mIsRecordingVideo = false;
+            camerafragment.stopRecordingVideo();
+        }
     }
 
     //

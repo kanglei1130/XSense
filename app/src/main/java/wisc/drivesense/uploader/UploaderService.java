@@ -234,12 +234,10 @@ public class UploaderService extends Service {
             return res;
         }
 
-        private String uploadTrip(String dbname) {
-            String androidid = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-
+        private byte[] fileToBytes(String file) {
             byte[] byteArray = null;
             try {
-                File dbfile = new File(Constants.kDBFolder + dbname + ".db");
+                File dbfile = new File(file);
                 long fsz = dbfile.length();
                 Log.d(TAG, "cur file size:" + fsz);
                 InputStream inputStream = new FileInputStream(dbfile);
@@ -254,6 +252,14 @@ public class UploaderService extends Service {
                 e.printStackTrace();
                 return null;
             }
+            return byteArray;
+        }
+
+        private String uploadTrip(String dbname) {
+            String androidid = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+
+            byte[] byteArray = fileToBytes(Constants.kDBFolder + dbname + ".db");
+            byte[] videoArray = fileToBytes(Constants.kVideoFolder + dbname + ".mp4");
 
             String res = null;
             try {
@@ -273,6 +279,7 @@ public class UploaderService extends Service {
 
                     //TODO: failed if too big
                     client.addFilePart("uploads", dbname + ".db", byteArray);
+                    client.addFilePart("videos", dbname + ".mp4", videoArray);
                     client.finishMultipart();
 
                 } else {

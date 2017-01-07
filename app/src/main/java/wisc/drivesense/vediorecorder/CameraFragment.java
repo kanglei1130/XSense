@@ -488,10 +488,9 @@ public class CameraFragment extends Fragment {
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
 
-        mNextVideoAbsolutePath = getVideoFilePath();
         mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
-        mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setVideoEncodingBitRate(1000000);
+        mMediaRecorder.setVideoFrameRate(5);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
@@ -511,16 +510,13 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private String getVideoFilePath() {
-        return Constants.kVideoFolder + System.currentTimeMillis() + ".mp4";
-    }
-
     public void setRecordingPath(String path) {
-        mNextVideoAbsolutePath = path;
+        mNextVideoAbsolutePath = path + ".mp4";
     }
 
 
     public void startRecordingVideo() {
+        Log.d(TAG, "startRecordingVideo()");
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
         }
@@ -582,6 +578,8 @@ public class CameraFragment extends Fragment {
     }
 
     public void stopRecordingVideo() {
+        Log.d(TAG, "stopRecordingVideo()");
+
         // UI
         // Stop recording
         mMediaRecorder.stop();
